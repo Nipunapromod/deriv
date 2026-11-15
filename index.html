@@ -1,665 +1,376 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mastermind AI Signal Terminal</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Lightweight Charts -->
-  <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
-  <!-- Tone.js for Audio Feedback -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: #050811; color: #f1f5f9; }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
-    /* Custom scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #090d16; }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #334155; }
-    .glow-cyan { box-shadow: 0 0 25px rgba(0, 229, 255, 0.15); }
-    .glow-green { box-shadow: 0 0 25px rgba(0, 255, 136, 0.15); }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-[#00E5FF] selection:text-black">
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mastermind AI Signal Terminal v4</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+body{font-family:'Inter',sans-serif;background:#050811;color:#f1f5f9}.font-mono{font-family:'JetBrains Mono',monospace}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px}
+.card{background:#0b101d;border:1px solid rgba(30,41,59,.8);border-radius:1rem;padding:1rem}
+.cell{background:rgba(15,23,42,.8);border:1px solid #1e293b;border-radius:.75rem;padding:.55rem}
+.cell span:first-child{font-size:11px;color:#94a3b8;display:block}.cell span:last-child{font-family:'JetBrains Mono';font-size:13px;font-weight:700}
+.tg{padding:.35rem .7rem;border-radius:.5rem;font-size:12px;font-weight:600;border:1px solid #1e293b;color:#94a3b8;background:rgba(15,23,42,.6)}
+.tg.on{background:rgba(0,229,255,.18);color:#00E5FF;border-color:rgba(0,229,255,.4)}
+.up{color:#00FF88}.dn{color:#FF3366}.nt{color:#fbbf24}
+</style></head>
+<body class="min-h-screen flex flex-col antialiased">
+<header class="border-b border-slate-800 bg-[#070b14]/90 backdrop-blur sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00E5FF] to-[#00FF88] flex items-center justify-center text-black text-xl"><i class="fa-solid fa-brain"></i></div>
+    <div><h1 class="font-bold text-base flex items-center gap-2">MASTERMIND AI <span class="text-xs px-2 py-0.5 rounded bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 font-mono">v4.3</span></h1>
+    <p class="text-xs text-slate-400">Deriv real feed · multi-factor quant engine</p></div>
+  </div>
+  <div class="flex items-center gap-3">
+    <div id="badge" class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5"></div>
+    <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+      <button id="mLive" onclick="setMode(true)" class="tg on">Live Deriv</button>
+      <button id="mDemo" onclick="setMode(false)" class="tg">Demo Sim</button>
+    </div>
+  </div>
+</header>
 
-  <!-- Header -->
-  <header class="border-b border-slate-800 bg-[#070b14]/90 backdrop-blur sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00E5FF] to-[#00FF88] flex items-center justify-center text-black font-extrabold text-xl shadow-lg glow-cyan">
-        <i class="fa-solid fa-brain"></i>
-      </div>
-      <div>
-        <h1 class="font-bold text-base tracking-wide flex items-center gap-2">
-          MASTERMIND AI <span class="text-xs px-2 py-0.5 rounded bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 font-mono">v3.4 LIVE</span>
-        </h1>
-        <p class="text-xs text-slate-400">Deriv Real Tick & 1M Quant-AI Engine</p>
+<main class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-4 gap-4 max-w-[1600px] w-full mx-auto">
+<div class="lg:col-span-1 flex flex-col gap-4">
+  <div class="card flex flex-col gap-3">
+    <div class="flex justify-between"><span class="text-xs font-bold text-slate-400 uppercase">Instrument</span><span class="text-sm font-mono text-[#00E5FF]" id="price">--</span></div>
+    <select id="sym" onchange="changeSym(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-semibold">
+      <option value="R_10">Volatility 10 Index</option><option value="R_25">Volatility 25 Index</option><option value="R_50">Volatility 50 Index</option>
+      <option value="R_75">Volatility 75 Index</option><option value="R_100">Volatility 100 Index</option><option value="1HZ10V">Volatility 10 (1s) Index</option>
+    </select>
+    <input type="password" id="oaKey" placeholder="OpenAI key (optional AI second opinion)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#00E5FF]">
+  </div>
+
+  <div class="card flex flex-col gap-3">
+    <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-400 uppercase">Composite Bias</span><span id="regime" class="text-[11px] font-mono text-slate-400">--</span></div>
+    <div class="flex items-end justify-between"><span id="dirTxt" class="text-2xl font-extrabold nt">WAIT</span><span id="scoreTxt" class="font-mono text-sm text-slate-300">0.00</span></div>
+    <div class="relative h-2.5 rounded-full bg-slate-800 overflow-hidden"><div id="gauge" class="absolute h-full"></div><div class="absolute left-1/2 top-0 h-full w-px bg-slate-500"></div></div>
+    <div class="flex justify-between text-[10px] text-slate-500"><span>BEARISH</span><span>BULLISH</span></div>
+    <div class="grid grid-cols-2 gap-2">
+      <div class="cell"><span>Backtest hit-rate</span><span id="btRate">--</span></div>
+      <div class="cell"><span>Backtest samples</span><span id="btN">--</span></div>
+    </div>
+    <p class="text-[10px] leading-snug text-slate-500">Hit-rate = this exact model replayed on past 1m candles (next-candle direction). Volatility indices are synthetic random walks; treat ~50% as "no edge".</p>
+  </div>
+
+  <div class="card"><div class="grid grid-cols-2 gap-2">
+    <div class="cell"><span>RSI 14</span><span id="iRsi">--</span></div>
+    <div class="cell"><span>MACD hist</span><span id="iMacd">--</span></div>
+    <div class="cell"><span>ADX / DI</span><span id="iAdx">--</span></div>
+    <div class="cell"><span>Stoch K/D</span><span id="iSt">--</span></div>
+    <div class="cell"><span>Boll %B</span><span id="iBb">--</span></div>
+    <div class="cell"><span>ATR 14</span><span id="iAtr">--</span></div>
+    <div class="cell"><span>Tick flow (30s)</span><span id="iTick">--</span></div>
+    <div class="cell"><span>Signal gate</span><span id="iGate" class="nt">LOADING</span></div>
+  </div></div>
+
+  <div class="card flex flex-col gap-3">
+    <div class="flex items-center justify-between"><div><span class="text-xs font-bold text-slate-400 uppercase block">Auto Signal</span><span id="autoTxt" class="text-[11px] text-slate-500">off</span></div><button id="autoBtn" onclick="setAuto(!S.auto)" class="tg">AUTO: OFF</button></div>
+    <button id="genBtn" onclick="generateSignal()" class="w-full bg-gradient-to-r from-[#00E5FF] to-[#00FF88] text-black font-bold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-bolt"></i> MANUAL SIGNAL</button>
+    <div id="scanCard" class="hidden flex flex-col gap-2 pt-3 border-t border-slate-800"><span class="text-xs font-bold text-slate-400 uppercase">Pre-Signal Scan</span><div id="scan" class="flex flex-col gap-2"></div></div>
+    <div id="outcome" class="hidden rounded-xl p-3 text-center font-bold text-xs border"></div>
+  </div>
+
+  <div class="card flex items-center justify-between">
+    <div><span class="text-xs text-slate-400 block">Win Rate</span><span class="font-mono text-lg font-bold up" id="sWin">0.0%</span></div>
+    <div><span class="text-xs text-slate-400 block">Signals</span><span class="font-mono text-lg font-bold" id="sTot">0</span></div>
+    <div><span class="text-xs text-slate-400 block">P/L</span><span class="font-mono text-lg font-bold text-cyan-400" id="sPl">$0.00</span></div>
+  </div>
+</div>
+
+<div class="lg:col-span-3 flex flex-col gap-4">
+  <div class="card flex flex-col relative">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3 flex-wrap gap-2">
+      <div class="flex items-center gap-2"><span class="font-bold text-sm" id="title">Volatility 10 Index</span><span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">1m</span></div>
+      <div class="flex gap-2">
+        <button id="bC" onclick="setStyle('c')" class="tg on">Candles</button><button id="bL" onclick="setStyle('l')" class="tg">Line</button>
+        <button id="bE" onclick="toggleOv('ema')" class="tg on">EMA 9/21</button><button id="bB" onclick="toggleOv('bb')" class="tg on">Bollinger</button>
       </div>
     </div>
-
-    <!-- Status & Feed Mode -->
-    <div class="flex items-center gap-3">
-      <div id="connectionBadge" class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 bg-amber-500/10 border-amber-500/40 text-amber-400">
-        <span class="w-2 h-2 rounded-full animate-pulse bg-current"></span><span>Connecting...</span>
-      </div>
-
-      <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800">
-        <button id="modeLiveBtn" onclick="switchFeedMode(true)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/40 transition">
-          Live Deriv
-        </button>
-        <button id="modeDemoBtn" onclick="switchFeedMode(false)" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">
-          Demo Sim
-        </button>
-      </div>
+    <div id="chart" class="w-full rounded-xl overflow-hidden" style="height:480px"></div>
+    <div id="overlay" class="hidden absolute top-20 left-8 bg-[#090d16]/90 backdrop-blur border border-slate-700 rounded-2xl p-4 shadow-2xl z-20 max-w-sm flex flex-col gap-2">
+      <div class="flex justify-between"><span class="text-xs font-bold text-[#00E5FF] uppercase">1-Minute Projection</span><span class="text-xs font-mono text-slate-400" id="cd">60s</span></div>
+      <p class="text-xs text-slate-300 leading-relaxed" id="ovTxt"></p>
+      <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"><div id="bar" class="bg-gradient-to-r from-[#00E5FF] to-[#00FF88] h-full"></div></div>
     </div>
-  </header>
-
-  <!-- Main Terminal Grid -->
-  <main class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-4 gap-4 max-w-[1600px] w-full mx-auto">
-
-    <!-- Left Column: Controls & Indicators -->
-    <div class="lg:col-span-1 flex flex-col gap-4">
-      
-      <!-- Market Selector & Credentials Card -->
-      <div class="bg-[#0b101d] border border-slate-800/80 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Asset Instrument</span>
-          <span class="text-xs font-mono text-[#00E5FF]" id="livePriceDisplay">--</span>
-        </div>
-        <select id="symbolSelect" onchange="changeSymbol(this.value)" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 focus:outline-none focus:border-[#00E5FF] transition">
-          <option value="R_10">Volatility 10 Index (R_10)</option>
-          <option value="R_25">Volatility 25 Index (R_25)</option>
-          <option value="R_50">Volatility 50 Index (R_50)</option>
-          <option value="R_75">Volatility 75 Index (R_75)</option>
-          <option value="R_100">Volatility 100 Index (R_100)</option>
-          <option value="1HZ10V">Volatility 10 (1s) Index</option>
-        </select>
-
-        <div class="pt-2 border-t border-slate-800 flex flex-col gap-2">
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-            <span>Deriv API Token</span>
-            <span class="text-[10px] text-slate-500">Optional for Public Feed</span>
-          </label>
-          <input type="password" id="derivTokenInput" placeholder="Paste Deriv API Token..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-[#00E5FF]">
-        </div>
-
-        <div class="pt-2 border-t border-slate-800 flex flex-col gap-2">
-          <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-            <span>OpenAI API Key</span>
-            <span class="text-[10px] text-slate-500">Optional AI Review</span>
-          </label>
-          <input type="password" id="openaiKeyInput" placeholder="sk-..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-[#00E5FF]">
-        </div>
-      </div>
-
-      <!-- Live Technical Analysis Engine -->
-      <div class="bg-[#0b101d] border border-slate-800/80 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Quant Indicators</span>
-          <span class="w-2 h-2 rounded-full bg-[#00FF88] animate-ping"></span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl">
-            <span class="text-[11px] text-slate-400 block">RSI (14)</span>
-            <span class="font-mono text-sm font-bold text-slate-200" id="indRsi">--</span>
-          </div>
-          <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl">
-            <span class="text-[11px] text-slate-400 block">EMA Crossover</span>
-            <span class="font-mono text-sm font-bold text-slate-400" id="indEma">--</span>
-          </div>
-          <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl">
-            <span class="text-[11px] text-slate-400 block">Tick Momentum</span>
-            <span class="font-mono text-sm font-bold text-slate-400" id="indTrend">--</span>
-          </div>
-          <div class="bg-slate-900/80 border border-slate-800 p-2.5 rounded-xl">
-            <span class="text-[11px] text-slate-400 block">Signal Gate</span>
-            <span class="font-mono text-sm font-bold text-amber-400" id="indGate">READY</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Generate Signal Action Card -->
-      <div class="bg-gradient-to-br from-[#0b101d] to-[#0f172a] border border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-col gap-3">
-        <button id="generateBtn" onclick="generateSignal()" class="w-full bg-gradient-to-r from-[#00E5FF] to-[#00FF88] hover:opacity-90 text-black font-bold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm tracking-wide">
-          <i class="fa-solid fa-bolt"></i> GENERATE 1M SIGNAL
-        </button>
-
-        <div id="signalOutcomeBanner" class="hidden rounded-xl p-3 text-center font-bold text-xs border"></div>
-      </div>
-
-      <!-- Performance Stats -->
-      <div class="bg-[#0b101d] border border-slate-800/80 rounded-2xl p-4 shadow-xl flex items-center justify-between">
-        <div>
-          <span class="text-xs text-slate-400 block">Win Rate</span>
-          <span class="font-mono text-lg font-bold text-[#00FF88]" id="statWinRate">0.0%</span>
-        </div>
-        <div class="h-8 w-px bg-slate-800"></div>
-        <div>
-          <span class="text-xs text-slate-400 block">Total Signals</span>
-          <span class="font-mono text-lg font-bold text-slate-200" id="statTotal">0</span>
-        </div>
-        <div class="h-8 w-px bg-slate-800"></div>
-        <div>
-          <span class="text-xs text-slate-400 block">P/L Est.</span>
-          <span class="font-mono text-lg font-bold text-cyan-400" id="statProfit">$0.00</span>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Right Column: Interactive Chart & 1M Trend Projection -->
-    <div class="lg:col-span-3 flex flex-col gap-4">
-      
-      <!-- Chart Container Card -->
-      <div class="bg-[#0b101d] border border-slate-800/80 rounded-2xl p-4 shadow-2xl flex flex-col flex-1 relative min-h-[500px]">
-        
-        <!-- Chart Toolbar -->
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
-          <div class="flex items-center gap-2">
-            <span class="font-bold text-sm text-slate-200" id="chartTitleLabel">Volatility 10 Index</span>
-            <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">1-Minute Candles</span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button id="btnCandleMode" onclick="setChartMode('candlestick')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/40 transition shadow-sm">
-              Candles
-            </button>
-            <button id="btnLineMode" onclick="setChartMode('line')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800 transition">
-              Line
-            </button>
-          </div>
-        </div>
-
-        <!-- TradingView Chart Area -->
-        <div id="tvchart-container" class="w-full flex-1 rounded-xl overflow-hidden relative" style="min-height: 440px;"></div>
-
-        <!-- Floating 1M Trend Projection Overlay -->
-        <div id="chartOverlayBanner" class="hidden absolute top-16 left-8 bg-[#090d16]/90 backdrop-blur border border-slate-700/80 rounded-2xl p-4 shadow-2xl z-20 max-w-sm flex flex-col gap-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-[#00E5FF] uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-radar animate-spin"></i> 1-Minute Trend Projection
-            </span>
-            <span class="text-xs font-mono text-slate-400" id="timerCountdown">60s</span>
-          </div>
-          <p class="text-xs text-slate-300 leading-relaxed" id="overlayReasonText">Analyzing tick momentum and volatility structure...</p>
-          <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div id="timerProgressBar" class="bg-gradient-to-r from-[#00E5FF] to-[#00FF88] h-full w-full transition-all duration-1000"></div>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-  </main>
-
-  <!-- JavaScript Logic -->
-  <script>
-    let chart = null;
-    let candlestickSeries = null;
-    let lineSeries = null;
-    let chartMode = 'candlestick';
-
-    let state = {
-      activeSymbol: 'R_10',
-      isLive: true,
-      currentSessionId: 0,
-      ws: null,
-      simInterval: null,
-      reconnectTimer: null,
-      ticks: [],
-      activeSignal: null,
-      timerInterval: null,
-      stats: { total: 0, wins: 0, profit: 0 },
-      isAnalyzing: false
-    };
-
-    function getSymbolDecimals(sym) {
-      if (sym.startsWith('1HZ')) return 2;
-      if (sym === 'R_75' || sym === 'R_100') return 4;
-      return 2;
-    }
-
-    function formatPrice(val, sym = state.activeSymbol) {
-      return Number(val).toFixed(getSymbolDecimals(sym));
-    }
-
-    window.addEventListener('load', () => {
-      initChart();
-      connectDerivWebSocket();
-    });
-
-    function initChart() {
-      const container = document.getElementById('tvchart-container');
-      container.innerHTML = '';
-
-      chart = LightweightCharts.createChart(container, {
-        width: container.clientWidth,
-        height: container.clientHeight,
-        layout: {
-          background: { type: 'solid', color: '#090d16' },
-          textColor: '#94a3b8',
-          fontFamily: 'Inter, sans-serif'
-        },
-        grid: {
-          vertLines: { color: 'rgba(30, 41, 59, 0.4)' },
-          horzLines: { color: 'rgba(30, 41, 59, 0.4)' }
-        },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-        rightPriceScale: { borderColor: 'rgba(51, 65, 85, 0.6)' },
-        timeScale: { borderColor: 'rgba(51, 65, 85, 0.6)', timeVisible: true, secondsVisible: true },
-      });
-
-      candlestickSeries = chart.addCandlestickSeries({
-        upColor: '#00FF88',
-        downColor: '#FF3366',
-        borderVisible: false,
-        wickUpColor: '#00FF88',
-        wickDownColor: '#FF3366',
-      });
-
-      lineSeries = chart.addLineSeries({ color: '#00E5FF', lineWidth: 2 });
-      lineSeries.applyOptions({ visible: false });
-
-      window.addEventListener('resize', () => {
-        if (chart && container) {
-          chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-        }
-      });
-    }
-
-    function changeSymbol(sym) {
-      state.activeSymbol = sym;
-      document.getElementById('chartTitleLabel').innerText = document.getElementById('symbolSelect').selectedOptions[0].text;
-      if (state.isLive) {
-        connectDerivWebSocket();
-      } else {
-        startDemoSimulation();
-      }
-    }
-
-    function switchFeedMode(isLive) {
-      state.isLive = isLive;
-      const liveBtn = document.getElementById('modeLiveBtn');
-      const demoBtn = document.getElementById('modeDemoBtn');
-
-      if (isLive) {
-        liveBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00FF88]/20 text-[#00FF88] border border-[#00FF88]/40 transition";
-        demoBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
-        connectDerivWebSocket();
-      } else {
-        demoBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 transition";
-        liveBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition";
-        startDemoSimulation();
-      }
-    }
-
-    function stopAllFeeds() {
-      if (state.ws) {
-        try { state.ws.close(); } catch(e){}
-        state.ws = null;
-      }
-      if (state.simInterval) {
-        clearInterval(state.simInterval);
-        state.simInterval = null;
-      }
-      if (state.reconnectTimer) {
-        clearTimeout(state.reconnectTimer);
-        state.reconnectTimer = null;
-      }
-    }
-
-    function updateConnectionBadge(status, text, cssClass) {
-      const badge = document.getElementById('connectionBadge');
-      if (!badge) return;
-      badge.className = `px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${cssClass}`;
-      badge.innerHTML = `<span class="w-2 h-2 rounded-full animate-pulse bg-current"></span><span>${text}</span>`;
-    }
-
-    // --- Connect Deriv Real WebSocket (Corrected Tick & History Subscription) ---
-    function connectDerivWebSocket() {
-      const sessionId = ++state.currentSessionId;
-      stopAllFeeds();
-      state.ticks = [];
-
-      updateConnectionBadge('CONNECTING', 'Connecting to Deriv Real Feed...', 'bg-amber-500/10 border-amber-500/40 text-amber-400');
-
-      const ws = new WebSocket("wss://ws.derivws.com/websockets/v3?app_id=1089");
-      state.ws = ws;
-
-      ws.onopen = () => {
-        if (state.currentSessionId !== sessionId) return;
-        updateConnectionBadge('LIVE', 'Connected to Deriv Real Feed', 'bg-[#00FF88]/10 border-[#00FF88]/40 text-[#00FF88]');
-
-        // Request 1-minute candles for accurate real chart matching
-        ws.send(JSON.stringify({
-          ticks_history: state.activeSymbol,
-          adjust_start_time: 1,
-          count: 150,
-          end: 'latest',
-          style: 'candles',
-          granularity: 60
-        }));
-
-        // Subscribe to live tick stream
-        ws.send(JSON.stringify({
-          ticks: state.activeSymbol,
-          subscribe: 1
-        }));
-      };
-
-      ws.onmessage = (event) => {
-        if (state.currentSessionId !== sessionId) return;
-        const data = JSON.parse(event.data);
-
-        if (data.msg_type === 'candles') {
-          const candles = data.candles || [];
-          state.ticks = candles.map(c => ({
-            time: Number(c.epoch),
-            open: Number(c.open),
-            high: Number(c.high),
-            low: Number(c.low),
-            close: Number(c.close)
-          }));
-          updateChartData();
-          updateDashboardIndicators();
-        } else if (data.msg_type === 'tick') {
-          const tick = data.tick;
-          if (!tick || tick.symbol !== state.activeSymbol) return;
-
-          const price = Number(tick.quote);
-          const time = Number(tick.epoch);
-
-          if (state.ticks.length === 0) {
-            state.ticks.push({ time, open: price, high: price, low: price, close: price });
-          } else {
-            const last = state.ticks[state.ticks.length - 1];
-            // If within same minute, update candle
-            if (Math.floor(time / 60) === Math.floor(last.time / 60)) {
-              last.close = price;
-              last.high = Math.max(last.high, price);
-              last.low = Math.min(last.low, price);
-            } else {
-              // New minute candle
-              state.ticks.push({
-                time: Math.floor(time / 60) * 60,
-                open: last.close,
-                high: price,
-                low: price,
-                close: price
-              });
-              if (state.ticks.length > 300) state.ticks.shift();
-            }
-          }
-
-          updateChartData();
-          updateDashboardIndicators();
-        }
-      };
-
-      ws.onerror = () => {
-        if (state.currentSessionId !== sessionId) return;
-        updateConnectionBadge('ERROR', 'Deriv WS Error. Falling back to Demo Sim.', 'bg-[#FF3366]/10 border-[#FF3366]/40 text-[#FF3366]');
-      };
-
-      ws.onclose = () => {
-        if (state.currentSessionId !== sessionId) return;
-        if (state.isLive) {
-          state.reconnectTimer = setTimeout(() => {
-            if (state.isLive && state.currentSessionId === sessionId) connectDerivWebSocket();
-          }, 3000);
-        }
-      };
-    }
-
-    function startDemoSimulation() {
-      const sessionId = ++state.currentSessionId;
-      stopAllFeeds();
-      updateConnectionBadge('DEMO SIM', 'Simulated Live Feed', 'bg-cyan-500/10 border-cyan-500/40 text-cyan-400');
-
-      let basePrice = state.activeSymbol === 'R_75' ? 500000 : (state.activeSymbol === '1HZ10V' ? 1200 : 108.50);
-      const now = Math.floor(Date.now() / 60) * 60;
-      state.ticks = [];
-
-      for (let i = 60; i >= 0; i--) {
-        const time = now - (i * 60);
-        const delta = (Math.random() - 0.49) * (basePrice * 0.001);
-        const open = basePrice;
-        const close = open + delta;
-        const high = Math.max(open, close) + Math.random() * (basePrice * 0.0004);
-        const low = Math.min(open, close) - Math.random() * (basePrice * 0.0004);
-        state.ticks.push({ time, open, high, low, close });
-        basePrice = close;
-      }
-
-      updateChartData();
-      updateDashboardIndicators();
-
-      state.simInterval = setInterval(() => {
-        if (state.currentSessionId !== sessionId) return;
-        const last = state.ticks[state.ticks.length - 1];
-        const currentTime = Math.floor(Date.now() / 60) * 60;
-
-        if (currentTime > last.time) {
-          const newOpen = last.close;
-          const delta = (Math.random() - 0.49) * (newOpen * 0.001);
-          const newClose = newOpen + delta;
-          state.ticks.push({
-            time: currentTime,
-            open: newOpen,
-            high: Math.max(newOpen, newClose),
-            low: Math.min(newOpen, newClose),
-            close: newClose
-          });
-          if (state.ticks.length > 250) state.ticks.shift();
-        } else {
-          const delta = (Math.random() - 0.49) * (last.close * 0.0003);
-          last.close += delta;
-          last.high = Math.max(last.high, last.close);
-          last.low = Math.min(last.low, last.close);
-        }
-
-        updateChartData();
-        updateDashboardIndicators();
-      }, 1000);
-    }
-
-    function updateChartData() {
-      if (!candlestickSeries || !lineSeries || state.ticks.length === 0) return;
-      const formattedCandles = state.ticks.map(t => ({
-        time: t.time,
-        open: t.open,
-        high: t.high,
-        low: t.low,
-        close: t.close
-      }));
-      const formattedLine = state.ticks.map(t => ({
-        time: t.time,
-        value: t.close
-      }));
-      candlestickSeries.setData(formattedCandles);
-      lineSeries.setData(formattedLine);
-    }
-
-    function setChartMode(mode) {
-      chartMode = mode;
-      const btnCandle = document.getElementById('btnCandleMode');
-      const btnLine = document.getElementById('btnLineMode');
-
-      if (mode === 'candlestick') {
-        candlestickSeries.applyOptions({ visible: true });
-        lineSeries.applyOptions({ visible: false });
-        btnCandle.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/40 transition shadow-sm";
-        btnLine.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800 transition";
-      } else {
-        candlestickSeries.applyOptions({ visible: false });
-        lineSeries.applyOptions({ visible: true });
-        btnLine.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/40 transition shadow-sm";
-        btnCandle.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800 transition";
-      }
-    }
-
-    function updateDashboardIndicators() {
-      if (state.ticks.length < 15) return;
-      const closes = state.ticks.map(t => t.close);
-      const currentPrice = closes[closes.length - 1];
-      const prevPrice = closes[closes.length - 2];
-
-      let gains = 0, losses = 0;
-      for (let i = closes.length - 14; i < closes.length; i++) {
-        const diff = closes[i] - closes[i - 1];
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
-      }
-      const rsi = 100 - (100 / (1 + (gains / (losses || 1))));
-
-      const k9 = 2 / 10;
-      let ema9 = closes[closes.length - 14];
-      for (let i = closes.length - 13; i < closes.length; i++) {
-        ema9 = (closes[i] * k9) + (ema9 * (1 - k9));
-      }
-
-      document.getElementById('livePriceDisplay').innerText = formatPrice(currentPrice);
-      document.getElementById('indRsi').innerText = rsi.toFixed(1);
-      document.getElementById('indEma').innerText = ema9 > currentPrice ? 'BEARISH' : 'BULLISH';
-      document.getElementById('indEma').className = ema9 > currentPrice ? 'font-mono text-sm font-bold text-[#FF3366]' : 'font-mono text-sm font-bold text-[#00FF88]';
-      document.getElementById('indTrend').innerText = currentPrice >= prevPrice ? 'UPTICK' : 'DOWNTICK';
-      document.getElementById('indTrend').className = currentPrice >= prevPrice ? 'font-mono text-sm font-bold text-[#00FF88]' : 'font-mono text-sm font-bold text-[#FF3366]';
-    }
-
-    async function playTone(type) {
-      try {
-        await Tone.start();
-        const synth = new Tone.Synth().toDestination();
-        if (type === 'win') {
-          synth.triggerAttackRelease("C5", "8n", Tone.now());
-          synth.triggerAttackRelease("G5", "8n", Tone.now() + 0.1);
-        } else if (type === 'loss') {
-          synth.triggerAttackRelease("G4", "8n", Tone.now());
-          synth.triggerAttackRelease("D4", "8n", Tone.now() + 0.1);
-        } else {
-          synth.triggerAttackRelease("A4", "8n", Tone.now());
-        }
-      } catch (e) {
-        console.log("Audio skipped");
-      }
-    }
-
-    async function generateSignal() {
-      if (state.activeSignal || state.ticks.length < 15) return;
-      playTone('click');
-
-      const closes = state.ticks.map(t => t.close);
-      const entryPrice = closes[closes.length - 1];
-      const rsiVal = Number(document.getElementById('indRsi').innerText);
-      
-      const openaiKey = document.getElementById('openaiKeyInput').value.trim();
-      let direction = rsiVal < 48 ? 'BULLISH' : 'BEARISH';
-      let confidence = 0.84;
-      let reason = `RSI at ${rsiVal.toFixed(1)} with local momentum structure aligning for a 1-minute continuation.`;
-
-      if (openaiKey) {
-        try {
-          const res = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${openaiKey}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: [{
-                role: "system",
-                content: "Output JSON only: {\"direction\": \"BULLISH\"|\"BEARISH\", \"confidence\": 0.0-1.0, \"reason\": string}"
-              }, {
-                role: "user",
-                content: `Analyze asset ${state.activeSymbol} at price ${entryPrice}. RSI is ${rsiVal}. Give 1-minute trade direction.`
-              }],
-              response_format: { type: "json_object" }
-            })
-          });
-          const data = await res.json();
-          const parsed = JSON.parse(data.choices[0].message.content);
-          direction = parsed.direction;
-          confidence = parsed.confidence;
-          reason = parsed.reason;
-        } catch(err) {
-          console.log("AI Fallback to local quant rules");
-        }
-      }
-
-      state.activeSignal = {
-        symbolKey: state.activeSymbol,
-        entryPrice: entryPrice,
-        direction: direction,
-        confidence: confidence,
-        startTime: Date.now()
-      };
-
-      const banner = document.getElementById('chartOverlayBanner');
-      banner.classList.remove('hidden');
-      document.getElementById('overlayReasonText').innerText = `[${direction}] ${reason} (Conf: ${(confidence*100).toFixed(0)}%)`;
-      document.getElementById('signalOutcomeBanner').classList.add('hidden');
-
-      let timeLeft = 60;
-      const timerDisplay = document.getElementById('timerCountdown');
-      const progressBar = document.getElementById('timerProgressBar');
-
-      if (state.timerInterval) clearInterval(state.timerInterval);
-
-      state.timerInterval = setInterval(() => {
-        timeLeft--;
-        timerDisplay.innerText = `${timeLeft}s`;
-        progressBar.style.width = `${(timeLeft / 60) * 100}%`;
-
-        if (timeLeft <= 0) {
-          clearInterval(state.timerInterval);
-          const currentExit = state.ticks[state.ticks.length - 1].close;
-          finalizeSignalVerification(currentExit);
-        }
-      }, 1000);
-    }
-
-    function finalizeSignalVerification(exitPrice) {
-      const sig = state.activeSignal;
-      if (!sig) return;
-
-      const isWin = sig.direction === 'BULLISH' ? exitPrice > sig.entryPrice : exitPrice < sig.entryPrice;
-      playTone(isWin ? 'win' : 'loss');
-
-      const outcomeBanner = document.getElementById('signalOutcomeBanner');
-      outcomeBanner.classList.remove('hidden');
-      outcomeBanner.className = isWin ? 'rounded-xl p-3 text-center font-bold text-xs border bg-[#00FF88]/15 border-[#00FF88]/40 text-[#00FF88]' : 'rounded-xl p-3 text-center font-bold text-xs border bg-[#FF3366]/15 border-[#FF3366]/40 text-[#FF3366]';
-
-      if (isWin) {
-        outcomeBanner.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5"></i> 1M SIGNAL WON! (${formatPrice(sig.entryPrice)} → ${formatPrice(exitPrice)})`;
-      } else {
-        outcomeBanner.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5"></i> 1M SIGNAL LOST (${formatPrice(sig.entryPrice)} → ${formatPrice(exitPrice)})`;
-      }
-
-      document.getElementById('chartOverlayBanner').classList.add('hidden');
-
-      state.stats.total++;
-      if (isWin) state.stats.wins++;
-      state.stats.profit += (isWin ? 9.50 : -10.00);
-      updateStatsDisplay();
-
-      state.activeSignal = null;
-    }
-
-    function updateStatsDisplay() {
-      const winRate = state.stats.total > 0 ? ((state.stats.wins / state.stats.total) * 100).toFixed(1) : '0.0';
-      document.getElementById('statWinRate').innerText = `${winRate}%`;
-      document.getElementById('statTotal').innerText = state.stats.total;
-      const profitEl = document.getElementById('statProfit');
-      profitEl.innerText = `${state.stats.profit >= 0 ? '+' : ''}$${state.stats.profit.toFixed(2)}`;
-      profitEl.className = `font-mono text-lg font-bold ${state.stats.profit >= 0 ? 'text-[#00FF88]' : 'text-[#FF3366]'}`;
-    }
-  </script>
-</body>
-</html>
+  </div>
+  <div class="card"><span class="text-xs font-bold text-slate-400 uppercase">Factor Breakdown</span><div id="factors" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2"></div></div>
+</div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id), clamp=(v,a=-1,b=1)=>Math.max(a,Math.min(b,v));
+const EP=['wss://api.derivws.com/trading/v1/options/ws/public','wss://ws.derivws.com/websockets/v3?app_id=1089','wss://ws.binaryws.com/websockets/v3?app_id=1089'];
+const S={auto:false,autoT:null,cool:0,scanning:false,lt:0,epi:0,t0:0,bt:null,sym:'R_10',live:true,sid:0,ws:null,sim:null,rt:null,wd:null,pg:null,fails:0,got:false,lastMsg:0,
+  C:[],T:[],price:null,sig:null,last:null,btKey:0,lr:0,markers:[],stats:{total:0,wins:0,profit:0},show:{ema:true,bb:true},style:'c'};
+let chart,cS,lS,e9S,e21S,bbU,bbL,synth;
+
+/* ---------- chart ---------- */
+function initChart(){
+  const el=$('chart');
+  chart=LightweightCharts.createChart(el,{width:el.clientWidth,height:480,
+    layout:{background:{type:'solid',color:'#090d16'},textColor:'#94a3b8'},
+    grid:{vertLines:{color:'rgba(30,41,59,.4)'},horzLines:{color:'rgba(30,41,59,.4)'}},
+    crosshair:{mode:LightweightCharts.CrosshairMode.Normal},
+    rightPriceScale:{borderColor:'rgba(51,65,85,.6)',scaleMargins:{top:.08,bottom:.08}},
+    localization:{timeFormatter:t=>new Date(t*1000).toLocaleTimeString()},
+    timeScale:{borderColor:'rgba(51,65,85,.6)',timeVisible:true,secondsVisible:false,rightOffset:6,
+      tickMarkFormatter:t=>new Date(t*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}});
+  cS=chart.addCandlestickSeries({upColor:'#00FF88',downColor:'#FF3366',borderVisible:false,wickUpColor:'#00FF88',wickDownColor:'#FF3366'});
+  lS=chart.addLineSeries({color:'#00E5FF',lineWidth:2,visible:false});
+  const ln=(c,w=1,st=0)=>chart.addLineSeries({color:c,lineWidth:w,lineStyle:st,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+  e9S=ln('#fbbf24');e21S=ln('#a78bfa');bbU=ln('rgba(148,163,184,.7)',1,2);bbL=ln('rgba(148,163,184,.7)',1,2);
+  new ResizeObserver(()=>chart.applyOptions({width:el.clientWidth})).observe(el);
+}
+function setStyle(m){S.style=m;cS.applyOptions({visible:m==='c'});lS.applyOptions({visible:m==='l'});$('bC').classList.toggle('on',m==='c');$('bL').classList.toggle('on',m==='l');}
+function toggleOv(k){S.show[k]=!S.show[k];$(k==='ema'?'bE':'bB').classList.toggle('on',S.show[k]);overlays();}
+function resetSeries(){[cS,lS,e9S,e21S,bbU,bbL].forEach(s=>s.setData([]));cS.setMarkers([]);S.markers=[];S.btKey=0;}
+function pushChart(c,full){
+  if(full){cS.setData(S.C);lS.setData(S.C.map(x=>({time:x.time,value:x.close})));chart.timeScale().fitContent();chart.timeScale().scrollToRealTime();}
+  else{cS.update(c);lS.update({time:c.time,value:c.close});}
+}
+
+/* ---------- feed ---------- */
+function badge(txt,cls){const b=$('badge');b.className='px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 '+cls;b.innerHTML=`<span class="w-2 h-2 rounded-full animate-pulse bg-current"></span><span>${txt}</span>`;}
+const BAD={a:'bg-amber-500/10 border-amber-500/40 text-amber-400',g:'bg-[#00FF88]/10 border-[#00FF88]/40 text-[#00FF88]',r:'bg-[#FF3366]/10 border-[#FF3366]/40 text-[#FF3366]',c:'bg-cyan-500/10 border-cyan-500/40 text-cyan-400'};
+function stopFeeds(){
+  if(S.ws){S.ws.onclose=null;try{S.ws.close()}catch(e){}S.ws=null}
+  [S.sim,S.wd,S.pg].forEach(clearInterval);clearTimeout(S.rt);S.sim=S.wd=S.pg=null;
+}
+function connect(){
+  const sid=++S.sid;stopFeeds();S.C=[];S.T=[];S.price=null;S.got=false;S.t0=Date.now();resetSeries();
+  const ei=(S.epi+S.fails)%EP.length,ep=EP[ei];let why='';
+  badge(`Connecting to ${['Deriv public API','Deriv legacy API','Deriv backup API'][ei]}...`,BAD.a);
+  let ws;try{ws=new WebSocket(ep)}catch(e){S.fails++;S.rt=setTimeout(connect,1000);return}
+  S.ws=ws;const drop=m=>{why=m;try{ws.close()}catch(e){}};
+  const ready=m=>{S.got=true;S.epi=ei;S.fails=0;badge('LIVE · '+m,BAD.g)};
+  ws.onopen=()=>{if(sid!==S.sid)return;S.lastMsg=Date.now();
+    ws.send(JSON.stringify({ticks_history:S.sym,adjust_start_time:1,count:600,end:'latest',style:'candles',granularity:60,subscribe:1,req_id:1}));
+    ws.send(JSON.stringify({ticks:S.sym,subscribe:1,req_id:2}));
+    S.pg=setInterval(()=>ws.readyState===1&&ws.send('{"ping":1}'),20000);
+    S.wd=setInterval(()=>{if(!S.got&&Date.now()-S.t0>8000)drop('no data in 8s');else if(Date.now()-S.lastMsg>15000)drop('feed stalled')},2000);};
+  ws.onmessage=ev=>{if(sid!==S.sid)return;S.lastMsg=Date.now();let d;try{d=JSON.parse(ev.data)}catch(e){return}
+    if(d.error){
+      if(!S.got&&d.echo_req&&d.echo_req.style==='candles'){badge('Building candles from ticks...',BAD.a);ws.send(JSON.stringify({ticks_history:S.sym,count:5000,end:'latest',style:'ticks',req_id:3}))}
+      else if(!S.got)drop(d.error.message);return}
+    if(d.msg_type==='candles'){S.C=d.candles.map(c=>({time:+c.epoch,open:+c.open,high:+c.high,low:+c.low,close:+c.close}));ready('Deriv real feed');pushChart(null,true);render(true)}
+    else if(d.msg_type==='history'&&!S.got){const m=new Map();
+      d.history.times.forEach((x,i)=>{const k=Math.floor(x/60)*60,q=+d.history.prices[i],c=m.get(k);c?(c.high=Math.max(c.high,q),c.low=Math.min(c.low,q),c.close=q):m.set(k,{time:k,open:q,high:q,low:q,close:q})});
+      S.C=[...m.values()].sort((x,y)=>x.time-y.time);ready('Deriv real feed (tick-built)');pushChart(null,true);render(true)}
+    else if(d.msg_type==='ohlc'&&d.ohlc.symbol===S.sym){const o=d.ohlc;applyCandle({time:+o.open_time,open:+o.open,high:+o.high,low:+o.low,close:+o.close})}
+    else if(d.msg_type==='tick'&&d.tick.symbol===S.sym)applyTick(+d.tick.quote,+d.tick.epoch)};
+  ws.onerror=()=>{why=why||'network error'};
+  ws.onclose=()=>{if(sid!==S.sid||!S.live)return;clearInterval(S.wd);clearInterval(S.pg);if(!S.got)S.fails++;
+    if(S.fails>=6){setMode(false);badge('DEMO · live feed unreachable ('+(why||'blocked')+'). Press Live Deriv to retry',BAD.r);return}
+    badge(`Retry ${S.fails}/6 · ${why||'connection closed'}`,BAD.a);
+    S.rt=setTimeout(()=>{if(S.live&&sid===S.sid)connect()},S.got?1500:700)};
+}
+function applyCandle(c){
+  const l=S.C[S.C.length-1];if(l&&c.time<l.time)return;
+  if(l&&l.time===c.time)S.C[S.C.length-1]=c;else{S.C.push(c);if(S.C.length>700)S.C.shift();}
+  pushChart(c);render();
+}
+function applyTick(q,epoch){
+  S.price=q;S.lt=Date.now();S.T.push({t:epoch,q});if(S.T.length>300)S.T.shift();
+  const l=S.C[S.C.length-1];if(!l)return;const m=Math.floor(epoch/60)*60;let c;
+  if(m===l.time){l.close=q;l.high=Math.max(l.high,q);l.low=Math.min(l.low,q);c=l;}
+  else if(m>l.time){c={time:m,open:l.close,high:Math.max(l.close,q),low:Math.min(l.close,q),close:q};S.C.push(c);if(S.C.length>700)S.C.shift();}
+  else return;
+  pushChart(c);render();
+}
+function startDemo(){
+  const sid=++S.sid;stopFeeds();S.C=[];S.T=[];resetSeries();badge('DEMO · simulated feed',BAD.c);
+  const base={R_10:6200,R_25:2800,R_50:260,R_75:420000,R_100:1500,'1HZ10V':6200}[S.sym];
+  const vol=({R_10:.0006,R_25:.0012,R_50:.0018,R_75:.0025,R_100:.003,'1HZ10V':.0006})[S.sym];
+  let p=base,drift=0;const step=()=>{drift=drift*.9+(Math.random()-.5)*vol*.25;p+=p*(drift+(Math.random()-.5)*vol*.5);return p};
+  const now=Math.floor(Date.now()/60000)*60;
+  for(let i=299;i>=0;i--){const o=p;let h=p,l=p;for(let k=0;k<60;k++){step();h=Math.max(h,p);l=Math.min(l,p)}S.C.push({time:now-i*60,open:o,high:h,low:l,close:p});}
+  S.got=true;pushChart(null,true);render(true);
+  S.sim=setInterval(()=>{if(sid===S.sid)applyTick(step(),Math.floor(Date.now()/1000))},700);
+}
+function setMode(live){S.live=live;$('mLive').classList.toggle('on',live);$('mDemo').classList.toggle('on',!live);S.fails=0;live?connect():startDemo();}
+function changeSym(v){S.sym=v;$('title').innerText=$('sym').selectedOptions[0].text;S.live?connect():startDemo();}
+
+/* ---------- indicators ---------- */
+function ema(a,p){const k=2/(p+1);let e=a[0];return a.map((v,i)=>e=i?v*k+e*(1-k):v)}
+function rsi(c,p=14){if(c.length<=p)return 50;let g=0,l=0;for(let i=1;i<=p;i++){const d=c[i]-c[i-1];d>=0?g+=d:l-=d}g/=p;l/=p;
+  for(let i=p+1;i<c.length;i++){const d=c[i]-c[i-1];g=(g*(p-1)+Math.max(d,0))/p;l=(l*(p-1)+Math.max(-d,0))/p}return l===0?100:100-100/(1+g/l)}
+function adx(C,p=14){let tr=0,pd=0,md=0,atr,pdm,mdm;const dx=[];
+  for(let i=1;i<C.length;i++){const h=C[i].high,l=C[i].low,pc=C[i-1].close,t=Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc));
+    const up=h-C[i-1].high,dn=C[i-1].low-l,P=up>dn&&up>0?up:0,M=dn>up&&dn>0?dn:0;
+    if(i<=p){tr+=t;pd+=P;md+=M;if(i<p)continue;atr=tr;pdm=pd;mdm=md}else{atr+=t-atr/p;pdm+=P-pdm/p;mdm+=M-mdm/p}
+    const pi=100*pdm/atr,mi=100*mdm/atr;dx.push({pi,mi,v:100*Math.abs(pi-mi)/((pi+mi)||1)})}
+  if(dx.length<p)return{adx:20,pi:0,mi:0,atr:atr/p||0};
+  let a=dx.slice(0,p).reduce((s,d)=>s+d.v,0)/p;for(let i=p;i<dx.length;i++)a=(a*(p-1)+dx[i].v)/p;
+  const L=dx[dx.length-1];return{adx:a,pi:L.pi,mi:L.mi,atr:atr/p}}
+function bbAt(cl,i,n=20){if(i<n-1)return null;let s=0;for(let k=i-n+1;k<=i;k++)s+=cl[k];const m=s/n;let v=0;for(let k=i-n+1;k<=i;k++)v+=(cl[k]-m)**2;const sd=Math.sqrt(v/n);return{m,u:m+2*sd,l:m-2*sd,w:4*sd/m}}
+function stoch(C,p=14){const k=[];for(let i=C.length-3;i<C.length;i++){const s=C.slice(i-p+1,i+1),hh=Math.max(...s.map(x=>x.high)),ll=Math.min(...s.map(x=>x.low));k.push(hh===ll?50:100*(C[i].close-ll)/(hh-ll))}return{k:k[2],d:(k[0]+k[1]+k[2])/3}}
+function pattern(C){const a=C[C.length-2],b=C[C.length-1],rg=b.high-b.low||1e-9,body=Math.abs(b.close-b.open);
+  if(a.close<a.open&&b.close>b.open&&b.close>=a.open&&b.open<=a.close)return{s:1,t:'Bull engulf'};
+  if(a.close>a.open&&b.close<b.open&&b.close<=a.open&&b.open>=a.close)return{s:-1,t:'Bear engulf'};
+  const lw=Math.min(b.open,b.close)-b.low,uw=b.high-Math.max(b.open,b.close);
+  if(body/rg<.3&&lw/rg>.6)return{s:.8,t:'Hammer'};if(body/rg<.3&&uw/rg>.6)return{s:-.8,t:'Shooting star'};
+  if(body/rg<.1)return{s:0,t:'Doji'};return{s:0,t:'None'}}
+
+/* ---------- composite model ---------- */
+function analyze(C,T){
+  const cl=C.map(x=>x.close),n=C.length,px=cl[n-1];
+  const e9=ema(cl,9),e21=ema(cl,21),e50=ema(cl,50),e12=ema(cl,12),e26=ema(cl,26);
+  const mac=e12.map((v,i)=>v-e26[i]),sg=ema(mac,9),hist=mac[n-1]-sg[n-1],hPrev=mac[n-2]-sg[n-2];
+  const r=rsi(cl),ad=adx(C),st=stoch(C),b=bbAt(cl,n-1),pb=(px-b.l)/((b.u-b.l)||1e-9);
+  const ws=[];for(let i=Math.max(19,n-100);i<n;i++)ws.push(bbAt(cl,i).w);const wr=ws.filter(w=>w<=b.w).length/ws.length;
+  const trending=ad.adx>=25,squeeze=wr<.15,pat=pattern(C);
+  const hi=Math.max(...C.slice(n-11,n-1).map(x=>x.high)),lo=Math.min(...C.slice(n-11,n-1).map(x=>x.low));
+  const F=[];const add=(name,s,w,txt)=>F.push({name,s:clamp(s),w,txt});
+  add('Trend EMA 9/21/50',(e9[n-1]>e21[n-1]?.5:-.5)+(e21[n-1]>e50[n-1]?.5:-.5),2,e9[n-1]>e21[n-1]?'9 above 21':'9 below 21');
+  add('MACD momentum',hist/(ad.atr*.15||1)+(hist>hPrev?.2:-.2),1.5,(hist>hPrev?'rising':'falling')+' histogram');
+  add('RSI',r<30?.8:r>70?-.8:(r-50)/100,1,r<30?'oversold bounce':r>70?'overbought fade':'neutral zone');
+  add('Stochastic',st.k<20&&st.k>st.d?1:st.k>80&&st.k<st.d?-1:(st.k-50)/100,1,st.k<20?'oversold':st.k>80?'overbought':'mid-range');
+  add('Bollinger %B',trending?(pb-.5):(.5-pb)*1.6,1,trending?'trend: ride the band':'range: mean-revert');
+  add('ADX / DI',Math.sign(ad.pi-ad.mi)*clamp(ad.adx/40,0,1),1.5,ad.pi>ad.mi?'+DI leads':'-DI leads');
+  add('Candle pattern',pat.s,.75,pat.t);
+  add('Structure break',px>hi?1:px<lo?-1:clamp((px-(hi+lo)/2)/((hi-lo)/2||1))*.4,1,px>hi?'broke 10-bar high':px<lo?'broke 10-bar low':'inside range');
+  let tk=null;
+  if(T){const now=T.length?T[T.length-1].t:0,w=T.filter(t=>now-t.t<=30);
+    if(w.length>=8){const d=[];for(let i=1;i<w.length;i++)d.push(w[i].q-w[i-1].q);const sum=d.reduce((a,b)=>a+b,0),sd=Math.sqrt(d.reduce((a,b)=>a+b*b,0)/d.length)||1e-9;
+      const z=sum/(sd*Math.sqrt(d.length));tk=z;add('Tick flow (30s)',z/2,2,`z=${z.toFixed(2)}, ${Math.round(100*d.filter(x=>x>0).length/d.length)}% upticks`);}}
+  const W=F.reduce((a,f)=>a+f.w,0),score=F.reduce((a,f)=>a+f.s*f.w,0)/W;
+  const dir=Math.abs(score)<.15?'NEUTRAL':score>0?'BULLISH':'BEARISH';
+  return{score,dir,F,conf:Math.round(50+Math.abs(score)*40),
+    regime:squeeze?'SQUEEZE':trending?'TRENDING':'RANGING',ind:{r,hist,ad,st,pb,atr:ad.atr,tk,e9,e21,pat}}}
+
+function backtest(){
+  const cl=S.C.slice(0,-1),key=cl[cl.length-1]?.time;if(!key||key===S.btKey||cl.length<90)return;S.btKey=key;
+  let n=0,h=0;const L=[];for(let i=Math.max(60,cl.length-301);i<cl.length-1;i++){const a=analyze(cl.slice(0,i+1),null);if(a.dir==='NEUTRAL')continue;
+    const up=cl[i+1].close>cl[i].close,dn=cl[i+1].close<cl[i].close;if(!up&&!dn)continue;n++;const hit=(a.dir==='BULLISH'&&up)||(a.dir==='BEARISH'&&dn);if(hit)h++;L.push({s:Math.abs(a.score),hit});}
+  S.bt={rate:n?h/n:null,n,L};$('btRate').innerText=n?(100*h/n).toFixed(1)+'%':'--';$('btN').innerText=n;
+}
+
+/* ---------- render ---------- */
+function render(force){
+  const now=Date.now();if(!force&&now-S.lr<400)return;S.lr=now;if(S.C.length<70)return;
+  const a=analyze(S.C,S.T);S.last=a;const i=a.ind,col=a.dir==='BULLISH'?'up':a.dir==='BEARISH'?'dn':'nt';
+  const px=S.price??S.C[S.C.length-1].close,dp=px>1000?2:px>100?3:4;
+  $('price').innerText=px.toFixed(dp);
+  $('dirTxt').innerText=a.dir==='NEUTRAL'?'WAIT':a.dir;$('dirTxt').className='text-2xl font-extrabold '+col;
+  $('scoreTxt').innerText=(a.score>=0?'+':'')+a.score.toFixed(2)+' · '+a.conf+'%';
+  const g=$('gauge');g.style.left=a.score>=0?'50%':(50+a.score*50)+'%';g.style.width=Math.abs(a.score)*50+'%';g.style.background=a.score>=0?'#00FF88':'#FF3366';
+  $('regime').innerText=a.regime;
+  const set=(id,t,c)=>{$(id).innerText=t;if(c)$(id).className=c};
+  set('iRsi',i.r.toFixed(1),i.r<30?'up':i.r>70?'dn':'');set('iMacd',i.hist.toExponential(1),i.hist>0?'up':'dn');
+  set('iAdx',`${i.ad.adx.toFixed(0)} ${i.ad.pi>i.ad.mi?'▲':'▼'}`,i.ad.pi>i.ad.mi?'up':'dn');
+  set('iSt',`${i.st.k.toFixed(0)}/${i.st.d.toFixed(0)}`);set('iBb',i.pb.toFixed(2),i.pb<.1?'up':i.pb>.9?'dn':'');
+  set('iAtr',i.atr.toFixed(dp));set('iTick',i.tk==null?'--':(i.tk>=0?'+':'')+i.tk.toFixed(2),i.tk>0?'up':'dn');
+  set('iGate',a.dir==='NEUTRAL'?'NO EDGE':'ARMED',a.dir==='NEUTRAL'?'nt':col);
+  $('factors').innerHTML=a.F.map(f=>{const c=f.s>=0?'#00FF88':'#FF3366';return`<div><div class="flex justify-between text-[11px]"><span class="text-slate-300">${f.name}</span><span class="text-slate-500">${f.txt}</span></div>
+   <div class="relative h-1.5 rounded bg-slate-800 mt-1"><div class="absolute h-full rounded" style="left:${f.s>=0?50:50+f.s*50}%;width:${Math.abs(f.s)*50}%;background:${c}"></div><div class="absolute left-1/2 h-full w-px bg-slate-600"></div></div></div>`}).join('');
+  overlays();backtest();
+}
+function overlays(){
+  const C=S.C;if(C.length<30)return;const cl=C.map(x=>x.close),t=C.map(x=>x.time);
+  const e9=ema(cl,9),e21=ema(cl,21);
+  e9S.setData(S.show.ema?t.map((x,i)=>({time:x,value:e9[i]})):[]);e21S.setData(S.show.ema?t.map((x,i)=>({time:x,value:e21[i]})):[]);
+  const U=[],L=[];if(S.show.bb)for(let i=19;i<cl.length;i++){const b=bbAt(cl,i);U.push({time:t[i],value:b.u});L.push({time:t[i],value:b.l})}
+  bbU.setData(U);bbL.setData(L);
+}
+
+/* ---------- signals ---------- */
+function tone(type){try{Tone.start();synth=synth||new Tone.Synth().toDestination();const n=Tone.now();
+  if(type==='win'){synth.triggerAttackRelease('C5','8n',n);synth.triggerAttackRelease('G5','8n',n+.15)}
+  else if(type==='loss'){synth.triggerAttackRelease('G4','8n',n);synth.triggerAttackRelease('D4','8n',n+.15)}
+  else synth.triggerAttackRelease('A4','16n',n)}catch(e){}}
+function banner(html,cls){const o=$('outcome');o.className='rounded-xl p-3 text-center font-bold text-xs border '+cls;o.innerHTML=html}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function agg(C,m){const o=[];C.forEach(c=>{const t=Math.floor(c.time/(60*m))*60*m,l=o[o.length-1];l&&l.time===t?(l.high=Math.max(l.high,c.high),l.low=Math.min(l.low,c.low),l.close=c.close):o.push({...c,time:t})});return o}
+function paintScan(R){$('scan').innerHTML=R.map(r=>`<div class="flex items-start gap-2 text-[11px]"><i class="fa-solid ${{p:'fa-circle-check up',f:'fa-circle-xmark dn',w:'fa-triangle-exclamation nt',r:'fa-spinner fa-spin text-slate-500',s:'fa-minus text-slate-600'}[r.st]} mt-0.5"></i><div><span class="text-slate-200">${r.n}</span><span class="text-slate-500 block">${r.t}</span></div></div>`).join('')}
+async function scan(){
+  S.scanning=true;const btn=$('genBtn');btn.disabled=true;btn.classList.add('opacity-60');btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> SCANNING MARKET...';
+  $('outcome').classList.add('hidden');$('scanCard').classList.remove('hidden');
+  const N=['Data quality','Higher-timeframe bias (5m/15m)','Volatility & regime','Factor consensus','Score stability (8s)','Entry timing','Historical edge'];
+  const R=N.map(n=>({n,st:'r',t:'waiting...'}));paintScan(R);
+  let hard=null,warns=0,passes=0,fails=0;const grade=()=>fails===0?(warns<=1?'A':'B'):fails===1?'C':'D';
+  const res=(i,st,t)=>{R[i]={n:N[i],st,t};paintScan(R);if(st==='f'){fails++;hard=hard||`${N[i]}: ${t}`}if(st==='w')warns++;if(st==='p')passes++};
+  const bail=()=>{R.forEach((r,i)=>{if(r.st==='r')R[i]={n:N[i],st:'s',t:'skipped'}});paintScan(R);return{ok:false,why:hard,grade:grade()}};
+  try{
+    await sleep(350);const C=S.C,age=(Date.now()-S.lt)/1000;
+    res(0,C.length>=150&&age<5?'p':'f',`${C.length} candles, last tick ${age.toFixed(1)}s ago`);
+    let a=analyze(C,S.T);const sg=Math.sign(a.score)||1;
+    await sleep(350);
+    const a5=analyze(agg(C,5),null),a15=analyze(agg(C,15),null),al=(a5.score*.6+a15.score*.4)*sg;
+    res(1,al>=.1?'p':al>-.2?'w':'f',`5m ${a5.score.toFixed(2)} · 15m ${a15.score.toFixed(2)} → ${al>=.1?'aligned with trade':al>-.2?'weak / unclear':'AGAINST trade'}`);
+    await sleep(350);
+    const rg=C.slice(-100).map(c=>c.high-c.low).sort((x,y)=>x-y),vr=a.ind.atr/rg[50];
+    res(2,vr<.5||vr>2.2?'f':a.regime==='SQUEEZE'?'w':'p',`${a.regime}, ATR ${vr.toFixed(2)}x normal${vr<.5?' (dead market)':vr>2.2?' (too chaotic)':''}`);
+    await sleep(350);
+    const act=a.F.filter(f=>Math.abs(f.s)>.1),ag=act.filter(f=>Math.sign(f.s)===sg).length,ratio=ag/(act.length||1),m=Math.abs(a.score);
+    res(3,ratio>=.65&&m>=.2?'p':ratio>=.55&&m>=.15?'w':'f',`${ag}/${act.length} factors agree, score ${a.score.toFixed(2)}`);
+    if(hard)return bail();
+    const sc=[];for(let k=0;k<8;k++){await sleep(1000);const x=analyze(S.C,S.T);sc.push(x.score);R[4]={n:N[4],st:'r',t:`sampling ${k+1}/8 · ${x.score.toFixed(2)}`};paintScan(R)}
+    const good=sc.filter(x=>Math.sign(x)===sg&&Math.abs(x)>=.15).length/8,mean=sc.reduce((p,q)=>p+q,0)/8;
+    res(4,good>=.85?'p':good>=.7?'w':'f',`${Math.round(good*100)}% samples same direction, mean ${mean.toFixed(2)}`);
+    if(hard)return bail();
+    a=analyze(S.C,S.T);const n=S.C.length,px=S.price??S.C[n-1].close,atr=a.ind.atr,str=(px-a.ind.e21[n-1])/atr*sg,r=a.ind.r;
+    const w50=S.C.slice(n-51,n-1),lvl=sg>0?Math.max(...w50.map(c=>c.high)):Math.min(...w50.map(c=>c.low)),room=(lvl-px)*sg/atr;
+    res(5,str>3||(sg>0&&r>80)||(sg<0&&r<20)?'f':str>2||(room>0&&room<.5)?'w':'p',`${str.toFixed(1)} ATR from EMA21, RSI ${r.toFixed(0)}, ${room>0?room.toFixed(1)+' ATR to 50-bar '+(sg>0?'high':'low'):'beyond 50-bar level'}`);
+    const bt=S.bt,ok=bt&&bt.n>=30&&bt.rate>=.53;
+    res(6,ok?'p':'w',bt&&bt.n>=30?`model hit-rate ${(bt.rate*100).toFixed(1)}% over ${bt.n} past signals`:'too few past signals for a reliable edge estimate');
+    if(hard)return bail();
+    return{ok:true,dir:mean>0?'BULLISH':'BEARISH',conf:Math.round(clamp(50+35*Math.abs(mean)+3*passes-5*warns,50,88)),grade:grade(),mean};
+  }finally{S.scanning=false;btn.disabled=false;btn.classList.remove('opacity-60');btn.innerHTML='<i class="fa-solid fa-bolt"></i> MANUAL SIGNAL'}
+}
+function estWin(str){const L=(S.bt&&S.bt.L)||[],sim=L.filter(x=>x.s>=str-.05),use=sim.length>=10?sim:L,h=use.filter(x=>x.hit).length,n=use.length;
+  return{p:(h+10)/(n+20),basis:n?`${n} similar past signals${sim.length<10?', all strengths':''}, pulled toward 50%`:'no history yet, assumed 50%'}}
+async function generateSignal(auto=false){
+  if(S.sig||S.scanning)return;if(!auto)tone('click');
+  const r=await scan();
+  if(!r.ok&&auto){S.cool=Date.now()+20000;autoStatus('skipped: '+r.why);return}
+  if(auto)tone('click');
+  const a=S.last;
+  if(!r.ok){const k=a.ind.e9.length-1;r.dir=(a.score||a.ind.e9[k]-a.ind.e21[k])>=0?'BULLISH':'BEARISH';r.conf=50}
+  let dir=r.dir,conf=r.conf,note=r.ok?'':` ⚠ Weak setup, scan flagged: ${r.why}.`;
+  const key=$('oaKey').value.trim();
+  if(key){try{const res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'gpt-4o-mini',response_format:{type:'json_object'},messages:[
+      {role:'system',content:'You review quant snapshots of synthetic index data. Output JSON only: {"direction":"BULLISH"|"BEARISH"|"NEUTRAL","reason":string(<30 words)}'},
+      {role:'user',content:JSON.stringify({symbol:S.sym,regime:a.regime,score:+a.score.toFixed(2),factors:a.F.map(f=>[f.name,+f.s.toFixed(2),f.txt])})}]})});
+    const j=JSON.parse((await res.json()).choices[0].message.content);note=` AI: ${j.reason}`;
+    if(j.direction!==dir){conf=Math.max(50,conf-15);note=' ⚠ AI disagrees.'+note}}catch(e){}}
+  const last=S.C[S.C.length-1],entry=S.price??last.close;
+  const top=[...a.F].sort((x,y)=>Math.abs(y.s*y.w)-Math.abs(x.s*x.w)).slice(0,3).map(f=>f.name).join(', ');
+  const ew=estWin(Math.abs(a.score));S.sig={dir,entry,conf,auto,wr:ew.p,end:Date.now()+60000,line:cS.createPriceLine({price:entry,color:dir==='BULLISH'?'#00FF88':'#FF3366',lineWidth:1,lineStyle:2,title:'ENTRY'}),mi:S.markers.length};
+  S.markers.push({time:last.time,position:dir==='BULLISH'?'belowBar':'aboveBar',color:dir==='BULLISH'?'#00FF88':'#FF3366',shape:dir==='BULLISH'?'arrowUp':'arrowDown',text:auto?'AUTO':'MAN'});cS.setMarkers(S.markers);
+  $('overlay').classList.remove('hidden');$('outcome').classList.add('hidden');
+  $('ovTxt').innerText=`[${dir}] Est. win rate ${(ew.p*100).toFixed(1)}% (${ew.basis}). Break-even is 51.3%. Setup grade ${r.grade} · ${a.regime}. Drivers: ${top}.${note}`;
+  S.timer=setInterval(()=>{const left=Math.max(0,S.sig.end-Date.now());$('cd').innerText=Math.ceil(left/1000)+'s';$('bar').style.width=left/600+'%';
+    if(left<=0){clearInterval(S.timer);finish(S.price??S.C[S.C.length-1].close)}},250);
+}
+function finish(exit){
+  const s=S.sig;if(!s)return;const win=s.dir==='BULLISH'?exit>s.entry:exit<s.entry;
+  tone(win?'win':'loss');cS.removePriceLine(s.line);
+  if(S.markers[s.mi]){S.markers[s.mi].text=win?'WIN':'LOSS';cS.setMarkers(S.markers)}
+  banner(`<i class="fa-solid ${win?'fa-circle-check':'fa-circle-xmark'} mr-1.5"></i>1M SIGNAL ${win?'WON':'LOST'} · ${s.auto?'AUTO':'MANUAL'} (${s.entry.toFixed(3)} → ${exit.toFixed(3)})`,
+    win?'bg-[#00FF88]/15 border-[#00FF88]/40 text-[#00FF88]':'bg-[#FF3366]/15 border-[#FF3366]/40 text-[#FF3366]');
+  $('overlay').classList.add('hidden');
+  const st=S.stats;st.total++;if(win)st.wins++;st.profit+=win?9.5:-10;
+  $('sWin').innerText=(100*st.wins/st.total).toFixed(1)+'%';$('sTot').innerText=st.total;
+  $('sPl').innerText=(st.profit>=0?'+':'-')+'$'+Math.abs(st.profit).toFixed(2);$('sPl').className='font-mono text-lg font-bold '+(st.profit>=0?'up':'dn');
+  S.sig=null;S.cool=Date.now()+10000;
+}
+function autoStatus(t){$('autoTxt').innerText=t}
+function setAuto(on){S.auto=on;$('autoBtn').classList.toggle('on',on);$('autoBtn').innerText=on?'AUTO: ON':'AUTO: OFF';
+  clearInterval(S.autoT);S.autoT=null;if(on){S.autoT=setInterval(autoLoop,1000);autoStatus('watching market...')}else autoStatus('off')}
+function autoLoop(){
+  if(!S.auto)return;
+  if(S.sig)return autoStatus('signal active');
+  if(S.scanning)return autoStatus('running pre-signal scan...');
+  const w=S.cool-Date.now();if(w>0)return autoStatus(`cooldown ${Math.ceil(w/1000)}s`);
+  const a=S.last;if(!a||Date.now()-S.lt>5000)return autoStatus('waiting for fresh data...');
+  const act=a.F.filter(f=>Math.abs(f.s)>.1),sg=Math.sign(a.score),ratio=act.filter(f=>Math.sign(f.s)===sg).length/(act.length||1);
+  if(Math.abs(a.score)<.25||ratio<.7)return autoStatus(`watching · score ${a.score.toFixed(2)} (needs ±0.25)`);
+  generateSignal(true);
+}
+window.addEventListener('load',()=>{initChart();connect();setAuto(true)});
+</script></body></html>
